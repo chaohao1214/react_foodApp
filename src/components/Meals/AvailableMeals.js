@@ -6,13 +6,20 @@ import { useState, useEffect } from 'react';
 
 
 const AvailableMeals = () => {
-
+    const api = 'https://react-foodapp-880fa-default-rtdb.firebaseio.com/'
     const [meals, setMeals] = useState([])
     const [isLoading, setIsLoading] = useState(true);
+    const [httpError, setHttpError] = useState(null);
 
     useEffect(() => {
         const fetchMeals = async () => {
-            const response = await fetch('https://react-foodapp-880fa-default-rtdb.firebaseio.com/meals.json')
+            const response = await fetch(api + 'meals.json'
+            );
+
+            if (!response.ok) {
+                throw new Error('Something went wrong!')
+            }
+
             const responseData = await response.json();
 
             const loadedMeals = [];
@@ -22,21 +29,32 @@ const AvailableMeals = () => {
                     id: key,
                     name: responseData[key].name,
                     description: responseData[key].description,
-                    price: responseData[key].price
+                    price: responseData[key].price,
 
-                })
+                });
             }
-            setMeals(loadedMeals)
-            setIsLoading(false)
-        }
+            setMeals(loadedMeals);
+            setIsLoading(false);
+        };
 
-        fetchMeals()
-
-    }, [])
+        fetchMeals().catch((error) => {
+            console.log(error);
+            setIsLoading(false);
+            setHttpError(error);
+        });
+    }, []);
 
     if (isLoading) {
         return (<section className={classes.MealsLoading}>
             <p>Loading...</p>
+        </section>);
+    }
+
+    if (httpError) {
+        console.log(httpError);
+
+        return (<section className={classes.MealsErrors}>
+            <p>{httpError.message}</p>
         </section>)
     }
 
